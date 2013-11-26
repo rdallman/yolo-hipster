@@ -70,16 +70,17 @@ int main(int argc, char *argv[]) {
   //Checksum 1 byte
   sendline[2] = ~checksum;
 
+
   //while we get corrupted response or 7 tries
   //  send datagram, check checksum & length each time
-  char recvline[index];
+  char recvline[10000];
   int i = 0;
   int attempts = 0;
   unsigned char calc_cs;
   do {
     sendto(sockfd,sendline,index,0,
         (struct sockaddr *)&servaddr,sizeof(servaddr));
-    n=recvfrom(sockfd,recvline,index,0,NULL,NULL);
+    n=recvfrom(sockfd,recvline,10000,0,NULL,NULL);
     calc_cs = 0;
     for (i=0; i < n; i++) {
       calc_cs += recvline[i];
@@ -90,18 +91,16 @@ int main(int argc, char *argv[]) {
   //if we got a valid response in trial 1-7
   //  host: ip
   if (attempts < 8) {
-    printf("Request %d:", recvline[4]);
     for (i=5, arg=4; i < n; ) {
       int ips = recvline[i++];
       int j;
-      printf("\n%s:", argv[arg++]);
+      printf("%s:\n", argv[arg++]);
       for (j=0; j < ips; j++) {
-        printf("\n\t%d.%d.%d.%d",
+        printf("%d.%d.%d.%d\n",
             0xFF & recvline[i++], 0xFF & recvline[i++], 
             0xFF & recvline[i++], 0xFF & recvline[i++]);
       }
     }
-    printf("\n");
   } else {
     printf("7 tries are up. Something went terribly wrong\n");
   }
